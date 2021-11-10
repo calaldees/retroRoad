@@ -94,6 +94,40 @@
 	}
 
 
+	// http://paulbourke.net/geometry/pointlineplane/javascript.txt
+	// line intercept math by Paul Bourke http://paulbourke.net/geometry/pointlineplane/
+	// Determine the intersection point of two line segments
+	// Return FALSE if the lines don't intersect
+	function intersect(x1, y1, x2, y2, x3, y3, x4, y4) {
+		// Check if none of the lines are of length 0
+		if ((x1 === x2 && y1 === y2) || (x3 === x4 && y3 === y4)) {
+			return false
+		}
+		const denominator = ((y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1))
+		// Lines are parallel
+		if (denominator === 0) {
+			return false
+		}
+		const ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denominator
+		const ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denominator
+		// is the intersection along the segments
+		if (ua < 0 || ua > 1 || ub < 0 || ub > 1) {
+			breakpoint;
+			return false
+		}
+		// Return a object with the x and y coordinates of the intersection
+		const x = x1 + ua * (x2 - x1)
+		const y = y1 + ua * (y2 - y1)
+		return [x, y];
+	}
+
+	function drawLineStroke(c, x1, y1, x2, y2) {
+		c.beginPath();
+		c.moveTo(x1, y1);
+		c.lineTo(x2, y2);
+		c.stroke();
+	}
+
 
 	// Constants ---------------------------------------------------------------
 
@@ -143,6 +177,49 @@
 
 	// Game Objects ------------------------------------------------------------
 
+	const POV = [w/2, h/2];
+	const POV_BOTTOM_LEFT = [0,h];
+	const POV_BOTTOM_RIGHT = [w,h];
+
+	function roadSegment(c) {
+		const ROAD_EDGE_WIDTH = 20;
+		const row_top = 160;
+		const row_bottom = 196;
+
+		c.strokeStyle = 'green'
+		drawLineStroke(c, ...POV, ...POV_BOTTOM_LEFT)
+		drawLineStroke(c, ...[0, row_top, w, row_top])
+
+
+		function wedge_path() {
+			return [
+				intersect(...POV, ...POV_BOTTOM_LEFT     , ...[0, row_top, w, row_top]),
+				intersect(...POV, ...[ROAD_EDGE_WIDTH, h], ...[0, row_top, w, row_top]),
+				intersect(...POV, ...[ROAD_EDGE_WIDTH, h], ...[0, row_bottom, w, row_bottom]),
+				intersect(...POV, ...POV_BOTTOM_LEFT     , ...[0, row_bottom, w, row_bottom]),
+			]
+		}
+		function draw_wedge() {
+			c.fillStyle = 'red';
+			c.beginPath();
+			const path = wedge_path();
+			c.moveTo(...path[0]);
+			for (let pos=1 ; pos<path.length ; pos++) {
+				c.lineTo(...path[pos]);
+			}
+			c.fill();
+		}
+
+		draw_wedge();
+
+
+		c.fillStyle = 'white';
+		c.beginPath();
+		c.moveTo(w_crop_for_4_by_3, 50);
+		c.lineTo(100, 75);
+		c.lineTo(100, 25);
+		c.fill();
+	}
 
 	// Storage -----------------------------------------------------------------
 
@@ -193,6 +270,8 @@
 	function render(c, state) {
 		c.clearRect(0, 0, w, h);
 		
+		roadSegment(c);
+
 		c.fillStyle = 'white';
 		c.fillText(`Hello World: ${state.frame}`, 128, 128);
 	}
