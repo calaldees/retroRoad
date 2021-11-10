@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<link id="favicon" rel="shortcut icon" type="image/png" href="data:image/png;base64,....==" />
+	<style>
+		html, body {
+			margin: 0;
+			height: 100%;
+			overflow: hidden;
+			text-align: center;
+			background-color: black;
+		}
+		canvas {
+			image-rendering: pixelated;
+			object-fit: cover;
+			height: 100%; max-height: 100%;
+			max-width: 100%;
+		}
+		#github_fork {
+			position: absolute;
+			top: 0;
+			right: 0;
+			user-select: none;
+		}
+	</style>
+</head>
+<body>
+	<!-- Chrome Canvas Fullscreen - F11 to toggle fullscreen -->
+	<canvas id="canvas" width="480" height="270"></canvas>
+	<a id="github_fork" href="https://github.com/calaldees/retroRoad"><img loading="lazy" width="149" height="149" src="https://github.blog/wp-content/uploads/2008/12/forkme_right_white_ffffff.png?resize=149%2C149" class="attachment-full size-full" alt="Fork me on GitHub" data-recalc-dims="1"></a>
+</body>
+<script type="module">
+
+	// External functions copy&paste -------------------------------------------
+
+	// https://stackoverflow.com/a/37319954/3356840
+	function filterInPlace(a, condition, thisArg) {
+		let j = 0;
+		a.forEach((e, i) => {
+			if (!condition.call(thisArg, e, i, a)) {
+				if (i!==j) a[j] = e;
+				j++;
+			}
+		});
+		a.length = j;
+		return a;
+	}
+
+	export function all(iterable) {
+		for (let i of iterable) {
+			if (!i) {return false;}
+		}
+		return true;
+	}
+
+	export function* zip(...iterables) {
+		const iterators = [...iterables].map(iterable => iterable[Symbol.iterator]());
+		while (true) {
+			const iterable_items = iterators.map(iterator => iterator.next());
+			if (all(iterable_items.map(i => i.done))) {break;}
+			yield iterable_items.map(i => i.value);
+		}
+	}
+
+
+	function isObjectEmpty(obj) {return obj && Object.keys(obj).length === 0 && obj.constructor === Object;}  // https://stackoverflow.com/a/32108184
+
+
+	function mod(n, m) {return ((n % m) + m) % m;}
+	class Dimension {
+		constructor(...dimensions) {
+			this.dimensions = [...dimensions];
+		}
+		get width() {return this.dimensions[0];}
+		get height() {return this.dimensions[1];}
+		get size() {return this.dimensions.reduce((prev, current) => prev * current);}
+		normalise_position(...position) {
+			return [ // TODO: remove duplication? map?
+				mod(position[0], this.dimensions[0]),
+				mod(position[1], this.dimensions[1]),
+			];
+		}
+		index_to_position(i) {
+			return [
+				mod(i, this.width),
+				mod(Math.floor(i/this.width), this.height),
+			];
+		}
+		position_to_index(...position) {
+			const _position = this.normalise_position(...position);
+			return (this.width * _position[1]) + _position[0];
+		}
+	}
+
+
+
+	// Constants ---------------------------------------------------------------
+
+	const canvas = document.getElementById('canvas');
+	const c = canvas.getContext('2d');
+	const w = canvas.width;
+	const h = canvas.height;
+	const w_crop_for_4_by_3 = (w / 4 / 2);  // pixels to not use on each side left/right
+
+	// Events ------------------------------------------------------------------
+
+	canvas.addEventListener('click', (e) => {canvas.requestPointerLock();}, false);
+	function handel_keypress(event) {  // Apply keypress to correct player Gun object
+		// event.code
+		if (event.type.indexOf('mouse')>=0) {}
+		if (event.type.indexOf('up')>=0) {}
+		if (event.type.indexOf('down')>=0) {}
+	}
+	function handle_option_keypress(e) {
+		//if (e.code == "Digit1") {state.players = 1; reset();}
+	}
+	document.addEventListener('mouseup', handel_keypress, false);
+	document.addEventListener('keyup', (e)=>{handel_keypress(e); handle_option_keypress(e)}, false);
+	document.addEventListener('mousedown', handel_keypress, false);
+	document.addEventListener('keydown', handel_keypress, false);
+
+	// Running
+	function setRunning(running) {
+		console.log("running", running);
+		state.running = running;
+		if (!running && state.requestAnimationFrameId) {
+			cancelAnimationFrame(state.requestAnimationFrameId);
+			state.requestAnimationFrameId = undefined;
+		} else if (running && !state.requestAnimationFrameId) {
+			main();
+		}
+	}
+	window.addEventListener("focus", () => {setRunning(true)}, false);
+	window.addEventListener("blur", () => {setRunning(false)}, false);
+
+	window.addEventListener('resize', () => {show_github_fork();}, false);
+	function show_github_fork() {
+		document.getElementById("github_fork").style = `display: ${(window.innerWidth / window.innerHeight) <= 1.5 ? "none": "block"}`;
+	}
+	show_github_fork();
+
+
+	// Game Objects ------------------------------------------------------------
+
+
+	// Storage -----------------------------------------------------------------
+
+	function loadLocalData() {
+		const data = window.localStorage.getItem("data");
+		if (data) {
+			try {return JSON.parse(data);} catch {}
+		}
+		return {};
+	}
+	function saveLocalData(data) {
+		window.localStorage.setItem("data", JSON.stringify(data));
+	}
+
+
+	// Level -------------------------------------------------------------------
+
+
+
+	// Game Model --------------------------------------------------------------
+
+	const state = {
+		running: true,
+		store: loadLocalData(),
+		loaded_assets: false,
+		options: {
+		},
+		input: {
+			keys: [
+				["Space", "ControlLeft", "ShiftLeft", "KeyZ", "KeyX"],
+				["KeyA", "KeyS", "KeyQ", "KeyW", "KeyE"],
+			],
+		},
+		game_objects: [],
+	};
+
+	function reset() {
+
+	}
+
+
+	// called TARGET_FPS times a second
+	function incrementModel(state) {
+	}
+
+	// Render ------------------------------------------------------------------
+
+	function render(c, state) {
+		c.clearRect(0, 0, w, h);
+		
+		c.fillStyle = 'white';
+		c.fillText(`Hello World: ${state.frame}`, 128, 128);
+	}
+
+	function loadComplete() {
+		state.loaded_assets = true;
+		reset();
+		main();
+	}
+
+
+	// Main Timing Loop --------------------------------------------------------
+
+	const TARGET_FPS = 60;
+	const milliseconds_per_frame = 1000 / TARGET_FPS;
+	function main(time) {
+		if (!state.loaded_assets) {return;}
+		if (state.running) {state.requestAnimationFrameId = requestAnimationFrame(main);}
+		if (!time) {state.epoch = undefined;}
+		if (!state.epoch && time) {state.epoch = time;}
+		const this_frame = Math.floor((time - state.epoch) / milliseconds_per_frame);
+		const frames_to_render = this_frame - state.frame;
+		for (let f=0 ; f<frames_to_render ; f++) {
+			incrementModel(state);
+			state.frame++;
+		}
+		state.frame = this_frame;  // Should not be needed? but belt and braces
+		if (c && frames_to_render) {render(c, state);}
+	}
+
+	/// Root -------------------------------------------------------------------
+
+	loadComplete();  // TODO: should be called when sprites are loaded at a later time
+</script>
+</html>
