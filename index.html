@@ -123,8 +123,8 @@
 
 	function drawLineStroke(c, x1, y1, x2, y2) {
 		c.beginPath();
-		c.moveTo(x1, y1);
-		c.lineTo(x2, y2);
+		c.moveTo(x1+0.5, y1+0.5);
+		c.lineTo(x2+0.5, y2+0.5);
 		c.stroke();
 	}
 
@@ -181,21 +181,32 @@
 	const POV_BOTTOM_LEFT = [0,h];
 	const POV_BOTTOM_RIGHT = [w,h];
 
+	const SEGMENT_HEIGHT = 32;
+	const base_color = 'rgb(64, 165, 64)'
+	const segments = [
+		100, 40, 'rgb(255, 165, 0)',
+		140, 200, 'rgb(64, 64, 64)',
+		340, 40, 'rgb(255, 165, 0)',
+	];
+
 	function roadSegment(c) {
-		const ROAD_EDGE_WIDTH = 20;
-		const row_top = 160;
-		const row_bottom = 196;
+		const row_top = 196
+		const row_bottom = row_top + SEGMENT_HEIGHT
+
+		// Draw base color
+		c.strokeStyle = undefined
+		c.fillStyle = base_color
+		c.fillRect(0, row_top, w, row_bottom - row_top)
 
 		c.strokeStyle = 'green'
 		drawLineStroke(c, ...POV, ...POV_BOTTOM_LEFT)
 		drawLineStroke(c, ...[0, row_top, w, row_top])
 
-
 		function wedge_path() {
 			return [
 				intersect(...POV, ...POV_BOTTOM_LEFT     , ...[0, row_top, w, row_top]),
-				intersect(...POV, ...[ROAD_EDGE_WIDTH, h], ...[0, row_top, w, row_top]),
-				intersect(...POV, ...[ROAD_EDGE_WIDTH, h], ...[0, row_bottom, w, row_bottom]),
+				intersect(...POV, ...[40, h], ...[0, row_top, w, row_top]),
+				intersect(...POV, ...[40, h], ...[0, row_bottom, w, row_bottom]),
 				intersect(...POV, ...POV_BOTTOM_LEFT     , ...[0, row_bottom, w, row_bottom]),
 			]
 		}
@@ -219,6 +230,7 @@
 		c.lineTo(100, 75);
 		c.lineTo(100, 25);
 		c.fill();
+
 	}
 
 	// Storage -----------------------------------------------------------------
