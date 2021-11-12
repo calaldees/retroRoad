@@ -141,17 +141,20 @@
 	// Events ------------------------------------------------------------------
 
 	//canvas.addEventListener('click', (e) => {canvas.requestPointerLock();}, false);
-	function handel_keypress(event) {  // Apply keypress to correct player Gun object
+	function handel_keypress(event) {
 		// event.code
 		if (event.type.indexOf('mouse')>=0) {}
-		if (event.type.indexOf('up')>=0) {}
-		if (event.type.indexOf('down')>=0) {}
+		const keyUp = event.type.indexOf('up')>=0;
+		const keyDown = event.type.indexOf('down')>=0
+		if (state.input.keys.hasOwnProperty(event.code)) {
+			state.input.keys[event.code] = keyDown
+		}
 	}
 	function handle_option_keypress(e) {
 		//if (e.code == "Digit1") {state.players = 1; reset();}
 	}
 	document.addEventListener('mouseup', handel_keypress, false);
-	document.addEventListener('keyup', (e)=>{handel_keypress(e); handle_option_keypress(e)}, false);
+	document.addEventListener('keyup', handel_keypress, false);
 	document.addEventListener('mousedown', handel_keypress, false);
 	document.addEventListener('keydown', handel_keypress, false);
 
@@ -196,13 +199,16 @@
 		const row_bottom = row_top + SEGMENT_HEIGHT
 
 
-		c.strokeStyle = 'green'
-		drawLineStroke(c, ...POV, ...POV_BOTTOM_LEFT)
-		drawLineStroke(c, ...[0, row_top, w, row_top])
+		//c.strokeStyle = 'green'
+		//drawLineStroke(c, ...POV, ...POV_BOTTOM_LEFT)
+		//drawLineStroke(c, ...[0, row_top, w, row_top])
 
 		function wedge_path(row_top, row_bottom, left, right) {
-			const top = [0, row_top, w, row_top]
-			const bottom = [0, row_bottom, w, row_bottom]
+			const top = [-1000, row_top, w+1000, row_top]
+			const bottom = [-1000, row_bottom, w+1000, row_bottom]
+			const h_offset = state.view.x;
+			left+=h_offset;
+			right+=h_offset;
 			return [
 				intersect(...POV, left , h, ...top), // Top left
 				intersect(...POV, right, h, ...top), // Top Right
@@ -270,10 +276,15 @@
 		options: {
 		},
 		input: {
-			keys: [
-				["Space", "ControlLeft", "ShiftLeft", "KeyZ", "KeyX"],
-				["KeyA", "KeyS", "KeyQ", "KeyW", "KeyE"],
-			],
+			keys: {
+				ArrowLeft: false,
+				ArrowRight: false,
+				ArrowUp: false,
+				ArrowDown: false,
+			},
+		},
+		view: {
+			x: 0,
 		},
 		game_objects: [],
 	};
@@ -285,6 +296,9 @@
 
 	// called TARGET_FPS times a second
 	function incrementModel(state) {
+		if (state.input.keys.ArrowLeft) {state.view.x += -1}
+		if (state.input.keys.ArrowRight) {state.view.x += +1}
+
 	}
 
 	// Render ------------------------------------------------------------------
