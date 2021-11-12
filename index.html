@@ -139,7 +139,7 @@
 
 	// Events ------------------------------------------------------------------
 
-	canvas.addEventListener('click', (e) => {canvas.requestPointerLock();}, false);
+	//canvas.addEventListener('click', (e) => {canvas.requestPointerLock();}, false);
 	function handel_keypress(event) {  // Apply keypress to correct player Gun object
 		// event.code
 		if (event.type.indexOf('mouse')>=0) {}
@@ -189,7 +189,7 @@
 		340, 40, 'rgb(255, 165, 0)',
 	];
 
-	function roadSegment(c) {
+	function road(c) {
 		const row_top = 196
 		const row_bottom = row_top + SEGMENT_HEIGHT
 
@@ -202,18 +202,20 @@
 		drawLineStroke(c, ...POV, ...POV_BOTTOM_LEFT)
 		drawLineStroke(c, ...[0, row_top, w, row_top])
 
-		function wedge_path() {
+		function wedge_path(row_top, row_bottom, left, right) {
+			const top = [0, row_top, w, row_top]
+			const bottom = [0, row_bottom, w, row_bottom]
 			return [
-				intersect(...POV, ...POV_BOTTOM_LEFT     , ...[0, row_top, w, row_top]),
-				intersect(...POV, ...[40, h], ...[0, row_top, w, row_top]),
-				intersect(...POV, ...[40, h], ...[0, row_bottom, w, row_bottom]),
-				intersect(...POV, ...POV_BOTTOM_LEFT     , ...[0, row_bottom, w, row_bottom]),
+				intersect(...POV, left , h, ...top), // Top left
+				intersect(...POV, right, h, ...top), // Top Right
+				intersect(...POV, right, h, ...bottom), // Bottom Right
+				intersect(...POV, left , h, ...bottom), // Bottom Left
 			]
 		}
-		function draw_wedge() {
+		function draw_row() {
 			c.fillStyle = 'red';
 			c.beginPath();
-			const path = wedge_path();
+			const path = wedge_path(row_top, row_bottom, 0, 40);
 			c.moveTo(...path[0]);
 			for (let pos=1 ; pos<path.length ; pos++) {
 				c.lineTo(...path[pos]);
@@ -221,7 +223,7 @@
 			c.fill();
 		}
 
-		draw_wedge();
+		draw_row();
 
 
 		c.fillStyle = 'white';
@@ -282,7 +284,7 @@
 	function render(c, state) {
 		c.clearRect(0, 0, w, h);
 		
-		roadSegment(c);
+		road(c);
 
 		c.fillStyle = 'white';
 		c.fillText(`Hello World: ${state.frame}`, 128, 128);
