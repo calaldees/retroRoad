@@ -127,6 +127,7 @@
 		c.lineTo(x2+0.5, y2+0.5);
 		c.stroke();
 	}
+	function rgb(r,g,b) {return `rgb(${r},${g},${b})`}
 
 
 	// Constants ---------------------------------------------------------------
@@ -182,21 +183,18 @@
 	const POV_BOTTOM_RIGHT = [w,h];
 
 	const SEGMENT_HEIGHT = 32;
-	const base_color = 'rgb(64, 165, 64)'
+	const base_color = [64, 165, 64]
 	const segments = [
-		100, 40, 'rgb(255, 165, 0)',
-		140, 200, 'rgb(64, 64, 64)',
-		340, 40, 'rgb(255, 165, 0)',
+		100, 140, [255, 0, 0],
+		140, 300, [64, 64, 64],
+		300, 320, [220, 220, 220],
+		320, 400, [64, 64, 64],
 	];
 
 	function road(c) {
 		const row_top = 196
 		const row_bottom = row_top + SEGMENT_HEIGHT
 
-		// Draw base color
-		c.strokeStyle = undefined
-		c.fillStyle = base_color
-		c.fillRect(0, row_top, w, row_bottom - row_top)
 
 		c.strokeStyle = 'green'
 		drawLineStroke(c, ...POV, ...POV_BOTTOM_LEFT)
@@ -212,18 +210,28 @@
 				intersect(...POV, left , h, ...bottom), // Bottom Left
 			]
 		}
-		function draw_row() {
-			c.fillStyle = 'red';
-			c.beginPath();
-			const path = wedge_path(row_top, row_bottom, 0, 40);
-			c.moveTo(...path[0]);
-			for (let pos=1 ; pos<path.length ; pos++) {
-				c.lineTo(...path[pos]);
+		function draw_row(row_top, row_bottom, base_color, segments) {
+			// Draw base
+			c.strokeStyle = undefined
+			c.fillStyle = rgb(...base_color)
+			c.fillRect(0, row_top, w, row_bottom - row_top)
+
+			for (let i=0 ; i<segments.length ; i=i+3) {
+				const [left, right, color] = segments.slice(i,i+3)
+				c.fillStyle = rgb(...color);
+
+				c.beginPath();
+				const path = wedge_path(row_top, row_bottom, left, right);
+				c.moveTo(...path[0]);
+				for (let pos=1 ; pos<path.length ; pos++) {
+					c.lineTo(...path[pos]);
+				}
+				c.fill();
 			}
-			c.fill();
+
 		}
 
-		draw_row();
+		draw_row(row_top, row_bottom, base_color, segments);
 
 
 		c.fillStyle = 'white';
