@@ -187,21 +187,22 @@
 
 	const SEGMENT_HEIGHT = 32;
 	const base_color = [64, 165, 64]
-	const segments = [
-		100, 140, [255, 0, 0],
-		140, 300, [64, 64, 64],
-		300, 320, [220, 220, 220],
-		320, 400, [64, 64, 64],
+	const rows = [
+		[
+			100, 140, [255, 0, 0],
+			140, 500, [64, 64, 64],
+			260, 280, [220, 220, 220],
+			360, 380, [220, 220, 220],
+			500, 540, [255, 0, 0],
+		],
+		[
+			100, 140, [220, 220, 220],
+			140, 500, [64, 64, 64],
+			500, 540, [220, 220, 220],
+		],
 	];
 
 	function road(c) {
-		const row_top = 196
-		const row_bottom = row_top + SEGMENT_HEIGHT
-
-
-		//c.strokeStyle = 'green'
-		//drawLineStroke(c, ...POV, ...POV_BOTTOM_LEFT)
-		//drawLineStroke(c, ...[0, row_top, w, row_top])
 
 		function wedge_path(row_top, row_bottom, left, right) {
 			const top = [-1000, row_top, w+1000, row_top]
@@ -234,19 +235,10 @@
 				}
 				c.fill();
 			}
-
 		}
 
-		draw_row(row_top, row_bottom, base_color, segments);
-
-
-		c.fillStyle = 'white';
-		c.beginPath();
-		c.moveTo(w_crop_for_4_by_3, 50);
-		c.lineTo(100, 75);
-		c.lineTo(100, 25);
-		c.fill();
-
+		draw_row(196, 196+SEGMENT_HEIGHT, base_color, rows[1]);
+		draw_row(196+SEGMENT_HEIGHT, 196+(SEGMENT_HEIGHT*2), base_color, rows[0]);
 	}
 
 	// Storage -----------------------------------------------------------------
