@@ -200,8 +200,6 @@
 	// Game Objects ------------------------------------------------------------
 
 	const POV = [w/2, h/2];
-	const POV_BOTTOM_LEFT = [0,h];
-	const POV_BOTTOM_RIGHT = [w,h];
 	const OVERDRAW = 500;
 
 	const SEGMENT_HEIGHT = 32;
@@ -226,8 +224,8 @@
 	function road(c) {
 
 		function wedge_path(row_top, row_bottom, left, right) {
-			const top = [-1000, row_top, w+1000, row_top]
-			const bottom = [-1000, row_bottom, w+1000, row_bottom]
+			const top    = [Number.MIN_SAFE_INTEGER, row_top   , Number.MAX_SAFE_INTEGER, row_top   ]
+			const bottom = [Number.MIN_SAFE_INTEGER, row_bottom, Number.MAX_SAFE_INTEGER, row_bottom]
 			const h_offset = state.view.x;
 			left+=h_offset;
 			right+=h_offset;
@@ -258,31 +256,30 @@
 			}
 		}
 
-		//const ROW_TOP = POV[1] + 30;
-		const ROW_SIZE_FACTOR = 1.4
-		let row_sizes = [];
-		let row_size = 1;
-		for (let r of range(11)) {
-			row_sizes.push(row_size = row_size * ROW_SIZE_FACTOR)
+		const ROW_MAX_Y = POV[1] + 30
+		const ROW_SEGMENT_HEIGHT = 40
+
+		// Calculate row heights and y co-ordinates
+		const rows = []
+		let row = h + (state.view.y % ROW_SEGMENT_HEIGHT)
+		let row_height = ROW_SEGMENT_HEIGHT
+		while (row > ROW_MAX_Y && rows.length < 20) {
+			rows.push([Math.floor(row), Math.floor(row-row_height)])
+			row_height *= 0.7
+			row -= row_height
 		}
-		row_sizes.reverse()
-		let row = h;
-		let row_start = []
-		for (let row_size of row_sizes) {
-			row_start.push(row -= Math.trunc(row_size))
-		}
-		
-		let rows = [...previousValueIterator(row_start)]
-		rows.shift()
+
+		const SEGMENT_NUMBER = Math.abs(Math.floor(state.view.y/ROW_SEGMENT_HEIGHT))
+		// Draw rows
 		let row_count = 0
-		//console.log(rows)
-		//debugger
 		for (let [row_bottom, row_top] of rows) {
-			draw_row(row_top, row_bottom, ROW_DATA[row_count%ROW_DATA.length]);
+			draw_row(
+				Math.max(row_top, ROW_MAX_Y), 
+				Math.min(row_bottom, h), 
+				ROW_DATA[(row_count+SEGMENT_NUMBER) % ROW_DATA.length],
+			)
 			row_count++
 		}
-		//draw_row(196, 196+SEGMENT_HEIGHT, ROW_DATA[1]);
-		//draw_row(196+SEGMENT_HEIGHT, 196+(SEGMENT_HEIGHT*2), ROW_DATA[0]);
 	}
 
 	// Storage -----------------------------------------------------------------
@@ -321,6 +318,7 @@
 		},
 		view: {
 			x: 0,
+			y: 0,
 		},
 		game_objects: [],
 	};
@@ -334,7 +332,8 @@
 	function incrementModel(state) {
 		if (state.input.keys.ArrowLeft) {state.view.x += -1}
 		if (state.input.keys.ArrowRight) {state.view.x += +1}
-
+		if (state.input.keys.ArrowUp) {state.view.y += -1}
+		if (state.input.keys.ArrowDown) {state.view.y += +1}
 	}
 
 	// Render ------------------------------------------------------------------
