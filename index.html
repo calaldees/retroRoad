@@ -258,25 +258,31 @@
 
 		const ROW_MAX_Y = POV[1] + 30
 		const ROW_SEGMENT_HEIGHT = 40
+		const ROW_SEGMENT_REDUCE_RATIO = 0.7
+		const ROW_SEGMENT_HEIGHT_2 = ROW_SEGMENT_HEIGHT * ROW_SEGMENT_REDUCE_RATIO
+		const ROW_DRAW_MAX = 40
+
+		const SEGMENT_NUMBER = Math.floor(state.view.y/ROW_SEGMENT_HEIGHT_2)
+		const row_offset = state.view.y % ROW_SEGMENT_HEIGHT_2
+
+		console.log(state.view.y, SEGMENT_NUMBER, row_offset)
 
 		// Calculate row heights and y co-ordinates
 		const rows = []
-		let row = h + (state.view.y % ROW_SEGMENT_HEIGHT)
+		let row = h + row_offset
 		let row_height = ROW_SEGMENT_HEIGHT
-		while (row > ROW_MAX_Y && rows.length < 20) {
+		while (row > ROW_MAX_Y && rows.length < ROW_DRAW_MAX) {
 			rows.push([Math.floor(row), Math.floor(row-row_height)])
-			row_height *= 0.7
-			row -= row_height
+			row -= (row_height *= ROW_SEGMENT_REDUCE_RATIO)
 		}
 
-		const SEGMENT_NUMBER = Math.abs(Math.floor(state.view.y/ROW_SEGMENT_HEIGHT))
 		// Draw rows
 		let row_count = 0
 		for (let [row_bottom, row_top] of rows) {
 			draw_row(
-				Math.max(row_top, ROW_MAX_Y), 
-				Math.min(row_bottom, h), 
-				ROW_DATA[(row_count+SEGMENT_NUMBER) % ROW_DATA.length],
+				Math.max(row_top, ROW_MAX_Y),
+				Math.min(row_bottom, h),
+				ROW_DATA[row_count % ROW_DATA.length],
 			)
 			row_count++
 		}
@@ -356,7 +362,7 @@
 
 	// Main Timing Loop --------------------------------------------------------
 
-	const TARGET_FPS = 60;
+	const TARGET_FPS = 5;
 	const milliseconds_per_frame = 1000 / TARGET_FPS;
 	function main(time) {
 		if (!state.loaded_assets) {return;}
